@@ -1,0 +1,31 @@
+﻿@page "/status"
+@using Microsoft.AspNetCore.SignalR.Client
+@inject NavigationManager NavigationManager
+<h3>status</h3>
+<ul>
+    @foreach(var message in statusMessages)
+    { 
+        <li>@message</li>
+    }
+</ul>
+@code {
+    private List<string> statusMessages = new();
+
+    protected async override Task OnInitializedAsync()
+    {
+        //define the connection
+        var connection = new HubConnectionBuilder()
+                            .WithUrl(NavigationManager.ToAbsoluteUri("/statusHub"))
+                            .WithAutomaticReconnect()
+                            .Build();
+        //subscribe to broadcast method
+        connection.On<string, string>("ReceiveStatusUpdate", (sender, message)
+            =>
+        {
+            statusMessages.Add( $"{sender}:{message}");
+            InvokeAsync(StateHasChanged);
+        });
+        //start connection(socket)
+        await connection.StartAsync();
+    }
+}
