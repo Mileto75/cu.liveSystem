@@ -1,0 +1,22 @@
+﻿@using Microsoft.AspNetCore.SignalR.Client
+@inject NavigationManager NavigationManager
+<div class="alert alert-primary" role="alert">
+    <img src="@quoteModel.IconUrl" /> @quoteModel.Value
+</div>
+
+@code {
+    private QuoteModel quoteModel = new();
+    protected async override Task OnInitializedAsync()
+    {
+        var connection = new HubConnectionBuilder()
+                            .WithUrl(NavigationManager.ToAbsoluteUri("/statusHub"))
+                            .WithAutomaticReconnect()
+                            .Build();
+        connection.On<QuoteModel>("ReceiveQuote", (quote) =>
+        {
+            quoteModel = quote;
+            InvokeAsync(StateHasChanged);
+        });
+        await connection.StartAsync();
+    }
+}
